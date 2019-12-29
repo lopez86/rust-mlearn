@@ -60,37 +60,3 @@ pub trait Initialize {
         S1: Data<Elem = <<Self as Initialize>::ModelType as Regression>::DataType>,
         S2: Data<Elem = <<Self as Initialize>::ModelType as Regression>::DataType>;
 }
-
-/// Basic struct to build regression models.
-///
-/// Takes an initializer and optimizer for a model and builds it.
-/// A factory type structure is preferred to direct user creation
-/// as it avoids the problem of having potentially untrained models.
-pub struct RegressionBuilder<I, T>
-{
-    pub initializer: I,
-    pub optimizer: T,
-}
-
-/// Implementation factory class to initialize and train a model.
-impl<M, I, T> RegressionBuilder<I, T> where
-    M: Regression,
-    I: Initialize<ModelType = M>,
-    T: Optimize<ModelType= M>,
-{
-    /// Builds a model given some data inputs.
-    pub fn build_model<
-        S1: Data<Elem = M::DataType>,
-        S2: Data<Elem = M::DataType>,
-    >(
-        &self,
-        inputs: &ArrayBase<S1, Ix2>,
-        outputs: &ArrayBase<S2, Ix1>,
-        weights: Option<&ArrayBase<S2, Ix1>>,
-    ) -> Result<M, Box<dyn Error>>
-    {
-        let mut model = self.initializer.initialize(inputs, outputs, weights);
-        self.optimizer.optimize(inputs, outputs, weights, &mut model)?;
-        Ok(model)
-    }
-}
