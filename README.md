@@ -1,6 +1,7 @@
 # rust-mlearn
 Machine Learning Tools in Rust
 
+## Introduction
 This package is meant to provide some machine learning models and tools for the Rust language,
 currently using the ndarray package as a matrix and linear algebra backend.
 
@@ -16,3 +17,4 @@ linear regression models with different training algorithms).
 
 I am also just starting to learn Rust, so it's likely that some design choices can be improved to match the correct style for the
 language. Feel free to comment.
+
