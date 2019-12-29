@@ -1,0 +1,22 @@
+[package]
+name = "mlearn"
+version = "0.0.1"
+authors = ["Jeremy Lopez"]
+edition = "2018"
+
+description = "Machine learning models and tools."
+keywords = ["machine learning", "data science", "data analysis"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+#[lib]
+#name = "mlearn"
+#path = "src/lib.rs"
+
+[dependencies]
+rand = "0.7.2"
+ndarray = { version = "0.13.0"}
+ndarray-linalg = { version = "0.12.0"}
+ndarray-rand = "0.11.0"
+# Don't use blas stuff except for testing
+netlib-src = "0.7.4"
