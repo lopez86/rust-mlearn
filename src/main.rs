@@ -3,7 +3,7 @@ extern crate netlib_src;
 
 use ndarray::array;
 
-use mlearn::regression::RegressionBuilder;
+use mlearn::model_builder::ModelBuilder;
 use mlearn::linear_regression::{LinearMatrixSolver, ZeroInitializer};
 use mlearn::metrics::{mean_absolute_error, mean_squared_error};
 
@@ -11,11 +11,11 @@ use mlearn::metrics::{mean_absolute_error, mean_squared_error};
 fn main() {
     let my_data = array![[1., 1.,], [1., 0.], [1., 2.]];
     let my_results = array![1., 1., 1.];
-    let builder = RegressionBuilder {
+    let builder = ModelBuilder {
         initializer: ZeroInitializer {},
         optimizer: LinearMatrixSolver {},
     };
-    let model = builder.build_model(&my_data, &my_results, None).expect("Build failed.");
+    let model = builder.build_regression(&my_data, &my_results, None).expect("Build failed.");
     println!("{}", model.coefficients);
 
     // TODO: Turn into unit tests

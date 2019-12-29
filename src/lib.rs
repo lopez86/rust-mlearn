@@ -10,4 +10,8 @@ pub mod metrics;
 pub mod regression;
 pub mod linear_regression;
 
-// Classification: TODO
+// Classification
+pub mod classification;
+
+// High level model interfaces
+pub mod model_builder;

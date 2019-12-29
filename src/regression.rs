@@ -30,10 +30,10 @@ pub trait Regression {
 /// Training interfaces are assumed to be separate from the Regression
 /// object: A training object takes a Regression and modifies it based
 /// on the data given.
-pub trait TrainRegression {
+pub trait Optimize {
     type ModelType: Regression;
 
-    fn optimize_model<S1, S2>(
+    fn optimize<S1, S2>(
         &self,
         inputs: &ArrayBase<S1, Ix2>,
         outputs: &ArrayBase<S2, Ix1>,
@@ -41,12 +41,12 @@ pub trait TrainRegression {
         model: &mut Self::ModelType,
     ) -> Result<(), Box<dyn Error>>
     where
-        S1: Data<Elem = <<Self as TrainRegression>::ModelType as Regression>::DataType>,
-        S2: Data<Elem = <<Self as TrainRegression>::ModelType as Regression>::DataType>;
+        S1: Data<Elem = <<Self as Optimize>::ModelType as Regression>::DataType>,
+        S2: Data<Elem = <<Self as Optimize>::ModelType as Regression>::DataType>;
 }
 
 /// A trait to initialize a model.
-pub trait InitializeRegression {
+pub trait Initialize {
     type ModelType: Regression;
 
     /// Initialize the model from some data.
@@ -57,8 +57,8 @@ pub trait InitializeRegression {
         weights: Option<&ArrayBase<S2, Ix1>>,
     ) -> Self::ModelType
     where
-        S1: Data<Elem = <<Self as InitializeRegression>::ModelType as Regression>::DataType>,
-        S2: Data<Elem = <<Self as InitializeRegression>::ModelType as Regression>::DataType>;
+        S1: Data<Elem = <<Self as Initialize>::ModelType as Regression>::DataType>,
+        S2: Data<Elem = <<Self as Initialize>::ModelType as Regression>::DataType>;
 }
 
 /// Basic struct to build regression models.
@@ -75,8 +75,8 @@ pub struct RegressionBuilder<I, T>
 /// Implementation factory class to initialize and train a model.
 impl<M, I, T> RegressionBuilder<I, T> where
     M: Regression,
-    I: InitializeRegression<ModelType = M>,
-    T: TrainRegression<ModelType= M>,
+    I: Initialize<ModelType = M>,
+    T: Optimize<ModelType= M>,
 {
     /// Builds a model given some data inputs.
     pub fn build_model<
@@ -90,7 +90,7 @@ impl<M, I, T> RegressionBuilder<I, T> where
     ) -> Result<M, Box<dyn Error>>
     {
         let mut model = self.initializer.initialize(inputs, outputs, weights);
-        self.optimizer.optimize_model(inputs, outputs, weights, &mut model)?;
+        self.optimizer.optimize(inputs, outputs, weights, &mut model)?;
         Ok(model)
     }
 }

@@ -11,7 +11,7 @@ use std::error::Error;
 use ndarray::{Array, Array1, ArrayBase, Data, Ix1, Ix2, LinalgScalar};
 use ndarray_linalg::solve::Inverse;
 
-use crate::regression::{InitializeRegression, Regression, TrainRegression};
+use crate::regression::{Initialize, Optimize, Regression};
 
 /// Basic linear regression model.
 ///
@@ -36,7 +36,7 @@ impl<T: LinalgScalar> Regression for LinearRegressor<T> {
 /// An initializer that simply initializes all coefficients to zero.
 pub struct ZeroInitializer {}
 
-impl InitializeRegression for ZeroInitializer {
+impl Initialize for ZeroInitializer {
     type ModelType = LinearRegressor<f32>;
 
     /// Initialize a model.
@@ -70,13 +70,13 @@ impl InitializeRegression for ZeroInitializer {
 /// `x = (A^t A)^{-1} A^t y`
 pub struct LinearMatrixSolver {}
 
-impl TrainRegression for LinearMatrixSolver {
+impl Optimize for LinearMatrixSolver {
     type ModelType = LinearRegressor<f32>;
 
     /// Train the model.
     ///
     /// Weights not used here.
-    fn optimize_model<S1, S2>(
+    fn optimize<S1, S2>(
         &self,
         inputs: &ArrayBase<S1, Ix2>,
         outputs: &ArrayBase<S2, Ix1>,
