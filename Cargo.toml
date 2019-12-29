@@ -9,9 +9,9 @@ keywords = ["machine learning", "data science", "data analysis"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-#[lib]
-#name = "mlearn"
-#path = "src/lib.rs"
+[lib]
+name = "mlearn"
+path = "src/lib.rs"
 
 [dependencies]
 rand = "0.7.2"
