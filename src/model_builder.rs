@@ -1,3 +1,8 @@
+//! # Model builder
+//!
+//! `model_builder` defines a basic class to create models from
+//! an initializer and an optimizer.
+
 extern crate ndarray;
 
 use ndarray::{ArrayBase, Data, Ix1, Ix2};
@@ -12,7 +17,7 @@ use crate::classification::{
 
 use std::error::Error;
 
-/// Basic struct to build regression models.
+/// Basic struct to build models.
 ///
 /// Takes an initializer and optimizer for a model and builds it.
 /// A factory type structure is preferred to direct user creation
@@ -23,13 +28,13 @@ pub struct ModelBuilder<I, T>
     pub optimizer: T,
 }
 
-/// Implementation factory class to initialize and train a model.
+/// Implementation for a factory class to build regression models.
 impl<M, I, T> ModelBuilder<I, T> where
     M: Regression,
     I: RegInit<ModelType = M>,
     T: RegOpt<ModelType= M>,
 {
-    /// Builds a model given some data inputs.
+    /// Builds a regression model.
     pub fn build_regression<
         S1: Data<Elem = M::DataType>,
         S2: Data<Elem = M::DataType>,
@@ -46,13 +51,13 @@ impl<M, I, T> ModelBuilder<I, T> where
     }
 }
 
-/// Implementation factory class to initialize and train a model.
+/// Implementation for a factory class to build classifiers.
 impl<M, I, T> ModelBuilder<I, T> where
     M: Classification,
     I: ClassInit<ModelType = M>,
     T: ClassOpt<ModelType= M>,
 {
-    /// Builds a model given some data inputs.
+    /// Builds a classification model.
     pub fn build_classification<
         S1: Data<Elem = M::DataType>,
         S2: Data<Elem = ClassLabel>,
