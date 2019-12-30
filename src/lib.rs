@@ -36,6 +36,7 @@ pub mod linear_regression;
 
 // Classification
 pub mod classification;
+pub mod logistic_regression;
 
 // High level model interfaces
 pub mod model_builder;
