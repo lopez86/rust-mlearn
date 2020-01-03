@@ -44,21 +44,21 @@ mod tests {
 
     #[test]
     fn test_mean_squared_error() {
-        let myarray1 = ndarray::array![1., 2., 3.];
-        let myarray2 = ndarray::array![1., 3., 5.];
+        let myarray1 = array![1., 2., 3.];
+        let myarray2 = array![1., 3., 5.];
         let error = super::mean_squared_error(&myarray1, &myarray2);
         let epsilon = 1e-6;
         let expected_result: f64 = 5./3.;
-        assert_eq!( (error - expected_result).abs() < epsilon, true);
+        assert!( (error - expected_result).abs() < epsilon);
     }
 
     #[test]
     fn test_mean_absolute_error() {
-        let myarray1 = ndarray::array![1., 2., 3.];
-        let myarray2 = ndarray::array![1., 3., 5.];
+        let myarray1 = array![1., 2., 3.];
+        let myarray2 = array![1., 3., 5.];
         let error = super::mean_absolute_error(&myarray1, &myarray2);
         let epsilon = 1e-6;
         let expected_result: f64 = 1.;
-        assert_eq!( (error - expected_result).abs() < epsilon, true);
+        assert!( (error - expected_result).abs() < epsilon);
     }
 }

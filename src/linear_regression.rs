@@ -94,3 +94,71 @@ impl Optimize for LinearMatrixSolver {
         Ok(())
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    extern crate netlib_src;
+    use ndarray::array;
+    use super::*;
+
+    #[test]
+    fn test_linear_regressor() {
+        let coefficients = array![1.0, 2.0, 3.0];
+        let data = array![[0., 0., 0.], [0., 1., 2.]];
+        let model = LinearRegressor::<f64>{
+            coefficients: coefficients,
+        };
+        let predictions = model.predict(&data);
+        let expected_results = array![0., 8.];
+        let differences = expected_results - predictions;
+        let epsilon: f64 = 1.0e-6;
+        let good_results = differences.mapv(|a| a.abs() < epsilon);
+        for &result in good_results.iter() {
+            assert_eq!(result, true);
+        }
+    }
+
+    #[test]
+    fn test_zero_initializer() {
+        let data = array![[0., 0., 0.], [0., 1., 2.]];
+        let outputs = array![0., 0.];
+        let initializer = ZeroInitializer{};
+        let model = initializer.initialize(&data, &outputs, None);
+        let expected_results = array![0., 0., 0.];
+        assert_eq!(expected_results, model.coefficients);
+    }
+
+    #[test]
+    fn test_linear_matrix_solver() {
+        let data = array![[1., 0.], [1., 1.], [1., 2.]];
+        let outputs = array![1., 3., 5.];
+        let mut model = LinearRegressor {
+            coefficients: array![0., 0.],
+        };
+        let solver = LinearMatrixSolver{};
+        solver.optimize(&data, &outputs, None, &mut model)
+            .expect("Failed to optimize.");
+        let expected_coefficients = array![1.0, 2.0];
+        let differences = expected_coefficients - model.coefficients;
+        let absolute_error = differences.mapv(|a| a.abs()).sum();
+        let epsilon = 1e-6;
+        assert!(absolute_error < epsilon);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_solve_singular_matrix() {
+        // Set up a singular matrix - perfectly colinear features
+        let data = array![[1., 1.], [2., 2.], [3., 3.]];
+        let outputs = array![1., 2., 3.];
+        let mut model = LinearRegressor {
+            coefficients: array![0., 0.],
+        };
+        let solver = LinearMatrixSolver{};
+        // matrix inversion should fail and throw an error here
+        solver.optimize(&data, &outputs, None, &mut model)
+            .expect("Failed to optimize.");
+        assert!(true);
+    }
+}
