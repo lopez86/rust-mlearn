@@ -54,3 +54,57 @@ impl<T: NdFloat> ClassProbability for LogisticRegression<T> {
         results
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    extern crate netlib_src;
+    use super::*;
+    use ndarray::array;
+
+    #[test]
+    fn test_logistic_regression_probabilities() {
+        let model = LogisticRegression::<f64> {
+            coefficients: array![1.0, 2.0],
+        };
+        let data = array![[0., 0.], [0., 1.], [1., 0.], [1., 1.], [0., -1.]];
+        let prob2 = 1. / (1. + (-2_f64).exp());
+        let prob3 = 1. / (1. + (-1_f64).exp());
+        let prob4 = 1. / (1. + (-3_f64).exp());
+        let prob5 = 1. / (1. + (2_f64).exp());
+
+        let expected_results = array![
+            [0.5, 0.5],
+            [1. - prob2, prob2],
+            [1. - prob3, prob3],
+            [1. - prob4, prob4],
+            [1. - prob5, prob5],
+        ];
+
+        let result_probs = model.predict_proba(&data);
+        let differences = expected_results - result_probs;
+        let epsilon = 1e-8;
+        let error = differences.mapv(|a| a.abs()).sum();
+        assert!(error < epsilon);
+    }
+
+    #[test]
+    fn test_logistic_regression_predictions() {
+        let model = LogisticRegression::<f64> {
+            coefficients: array![1.0, 2.0],
+        };
+        let data = array![
+            [0., 0.],
+            [0., 1.],
+            [1., 0.],
+            [1., 1.],
+            [0., -1.],
+            [-1., 0.],
+            [-1., -1.]
+        ];
+        let expected_results = array![0, 1, 1, 1, 0, 0, 0];
+
+        let results = model.predict(&data);
+        assert_eq!(expected_results, results);
+    }
+}
