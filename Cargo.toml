@@ -20,3 +20,6 @@ ndarray-linalg = { version = "0.12.0"}
 ndarray-rand = "0.11.0"
 # Don't use blas stuff except for testing
 netlib-src = "0.7.4"
+
+[dev-dependencies]
+netlib-src = "0.7.4"
