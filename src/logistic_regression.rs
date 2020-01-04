@@ -2,8 +2,6 @@
 //!
 //! `logistic_regression` provides tools to build and run
 //! logistic regression models.
-//!
-//!
 
 extern crate ndarray;
 
@@ -11,10 +9,15 @@ use ndarray::{Array1, Array2, ArrayBase, Data, Ix2, NdFloat, s};
 
 use crate::classification::{Classification, ClassLabel, ClassProbability};
 
+/// Basic binary classification logistic regression model
+///
+/// A bias feature is assumed to be the first feature in
+/// functions where a bias exists.
 pub struct LogisticRegression<T: NdFloat> {
     pub coefficients: Array1<T>,
 }
 
+/// Simple function to classify based on threshold.
 fn convert_proba_to_class<T: NdFloat>(x: T, threshold: T) -> ClassLabel {
     if x > threshold {
         1
@@ -26,6 +29,7 @@ fn convert_proba_to_class<T: NdFloat>(x: T, threshold: T) -> ClassLabel {
 impl<T: NdFloat> Classification for LogisticRegression<T> {
     type DataType = T;
 
+    /// Predict the clas label.
     fn predict<S>(&self, inputs: &ArrayBase<S, Ix2>) -> Array1<ClassLabel>
     where
         S: Data<Elem = Self::DataType>
@@ -39,6 +43,7 @@ impl<T: NdFloat> Classification for LogisticRegression<T> {
 }
 
 impl<T: NdFloat> ClassProbability for LogisticRegression<T> {
+    /// Predict the probabilities for each class.
     fn predict_proba<S>(&self, inputs: &ArrayBase<S, Ix2>) -> Array2<T>
     where
         S: Data<Elem = T>
@@ -102,8 +107,8 @@ mod tests {
             [-1., 0.],
             [-1., -1.]
         ];
-        let expected_results = array![0, 1, 1, 1, 0, 0, 0];
 
+        let expected_results = array![0, 1, 1, 1, 0, 0, 0];
         let results = model.predict(&data);
         assert_eq!(expected_results, results);
     }
