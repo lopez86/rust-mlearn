@@ -65,6 +65,8 @@ impl Initialize for ZeroInitializer {
 /// A solver that runs the basic matrix solution for a linear regression.
 ///
 /// No regularization is done.
+/// This is equivalent to running Newton's method on the gradient
+/// of the MSE loss.
 ///
 /// For a problem of the form `Ax = y`, this calculates:
 /// `x = (A^t A)^{-1} A^t y`
@@ -94,6 +96,51 @@ impl Optimize for LinearMatrixSolver {
         Ok(())
     }
 }
+
+
+/// An optimizer doing matrix-inversion based optimization
+/// with L2-regularization.
+///
+/// Equivalent to a simple Newton's method solver.
+pub struct RegularizedMatrixSolver {
+    pub regularization_strength: f32,
+    pub regularize_bias: bool,
+}
+
+
+impl Optimize for RegularizedMatrixSolver {
+    type ModelType = LinearRegressor<f32>;
+
+    /// Train the model.
+    ///
+    /// Weights not used here.
+    fn optimize<S1, S2>(
+        &self,
+        inputs: &ArrayBase<S1, Ix2>,
+        outputs: &ArrayBase<S2, Ix1>,
+        _weights: Option<&ArrayBase<S2, Ix1>>,
+        model: &mut Self::ModelType,
+    ) -> Result<(), Box<dyn Error>>
+    where
+        S1: Data<Elem = f32>,
+        S2: Data<Elem = f32>,
+    {
+        let count_norm = inputs.shape()[0] as f32;
+        let mut regularization = self.regularization_strength * Array::eye(model.coefficients.len());
+        if !self.regularize_bias {
+            regularization[[0, 0]] = 0.;
+        }
+        let inputs_squared_inv = (
+            inputs.t().dot(inputs) / count_norm + regularization
+        ).inv()?;
+        let inputs_outputs = inputs.t().dot(outputs) / count_norm;
+        let results = inputs_squared_inv.dot(&inputs_outputs);
+        model.coefficients = results;
+        Ok(())
+    }
+}
+
+
 
 
 #[cfg(test)]
@@ -160,5 +207,26 @@ mod tests {
         solver.optimize(&data, &outputs, None, &mut model)
             .expect("Failed to optimize.");
         assert!(true);
+    }
+
+    #[test]
+    fn test_regularized_matrix_solver() {
+        let data = array![[1., 0.], [1., 1.]];
+        let outputs = array![1., 3.];
+        let mut model = LinearRegressor {
+            coefficients: array![0., 0.],
+        };
+        let solver = RegularizedMatrixSolver{
+            regularization_strength: 1.0,
+            regularize_bias: false,
+        };
+        solver.optimize(&data, &outputs, None, &mut model)
+            .expect("Failed to optimize.");
+        let expected_coefficients = array![9. / 5., 2. / 5.];
+        let differences = &expected_coefficients - &model.coefficients;
+        println!("{}", model.coefficients);
+        let absolute_error = differences.mapv(|a| a.abs()).sum();
+        let epsilon = 1e-6;
+        assert!(absolute_error < epsilon);
     }
 }
