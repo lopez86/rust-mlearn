@@ -37,7 +37,7 @@ impl<T: LinalgScalar> Regression for LinearRegressor<T> {
 pub struct ZeroInitializer {}
 
 impl Initialize for ZeroInitializer {
-    type ModelType = LinearRegressor<f32>;
+    type ModelType = LinearRegressor<f64>;
 
     /// Initialize a model.
     ///
@@ -49,8 +49,8 @@ impl Initialize for ZeroInitializer {
         _weights: Option<&ArrayBase<S2, Ix1>>,
     ) -> Self::ModelType
     where
-        S1: Data<Elem = f32>,
-        S2: Data<Elem = f32>,
+        S1: Data<Elem = f64>,
+        S2: Data<Elem = f64>,
      {
         let n_features = inputs.shape()[1];
         let coefficients = Array::zeros((n_features,));
@@ -73,7 +73,7 @@ impl Initialize for ZeroInitializer {
 pub struct LinearMatrixSolver {}
 
 impl Optimize for LinearMatrixSolver {
-    type ModelType = LinearRegressor<f32>;
+    type ModelType = LinearRegressor<f64>;
 
     /// Train the model.
     ///
@@ -86,8 +86,8 @@ impl Optimize for LinearMatrixSolver {
         model: &mut Self::ModelType,
     ) -> Result<(), Box<dyn Error>>
     where
-        S1: Data<Elem = f32>,
-        S2: Data<Elem = f32>,
+        S1: Data<Elem = f64>,
+        S2: Data<Elem = f64>,
     {
         let inputs_squared_inv = (inputs.t().dot(inputs)).inv()?;
         let inputs_outputs = inputs.t().dot(outputs);
@@ -103,13 +103,13 @@ impl Optimize for LinearMatrixSolver {
 ///
 /// Equivalent to a simple Newton's method solver.
 pub struct RegularizedMatrixSolver {
-    pub regularization_strength: f32,
+    pub regularization_strength: f64,
     pub regularize_bias: bool,
 }
 
 
 impl Optimize for RegularizedMatrixSolver {
-    type ModelType = LinearRegressor<f32>;
+    type ModelType = LinearRegressor<f64>;
 
     /// Train the model.
     ///
@@ -122,10 +122,10 @@ impl Optimize for RegularizedMatrixSolver {
         model: &mut Self::ModelType,
     ) -> Result<(), Box<dyn Error>>
     where
-        S1: Data<Elem = f32>,
-        S2: Data<Elem = f32>,
+        S1: Data<Elem = f64>,
+        S2: Data<Elem = f64>,
     {
-        let count_norm = inputs.shape()[0] as f32;
+        let count_norm = inputs.shape()[0] as f64;
         let mut regularization = self.regularization_strength * Array::eye(model.coefficients.len());
         if !self.regularize_bias {
             regularization[[0, 0]] = 0.;

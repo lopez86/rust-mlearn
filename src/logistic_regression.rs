@@ -4,10 +4,30 @@
 //! logistic regression models.
 
 extern crate ndarray;
+extern crate ndarray_linalg;
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix2, NdFloat, s};
+use ndarray::{
+    Array,
+    Array1,
+    Array2,
+    ArrayBase,
+    Data,
+    Ix1,
+    Ix2,
+    NdFloat,
+    s,
+};
+use ndarray_linalg::solve::Inverse;
 
-use crate::classification::{Classification, ClassLabel, ClassProbability};
+
+use crate::classification::{
+    Classification,
+    ClassLabel,
+    ClassProbability,
+    Optimize,
+};
+
+use std::error::Error;
 
 /// Basic binary classification logistic regression model
 ///
@@ -57,6 +77,71 @@ impl<T: NdFloat> ClassProbability for LogisticRegression<T> {
         let inverse_probabilities = probabilities.mapv(|a| one - a);
         results.slice_mut(s![.., 0]).assign(&inverse_probabilities);
         results
+    }
+}
+
+
+/// A solver using a naive implementation of Newton's method.
+///
+/// Be very careful with this solver since results can be very unstable
+/// if bad initial conditions are chosen.
+/// This is likely an effect of the disappearing gradients problem
+/// for the logistic function. This will tend to drive the bias toward
+/// extremely large values.
+///
+/// Currently, L2 regularization can be used. L1 regularization will also
+/// likely be implemented in the near future.
+///
+/// The model makes use of directly inverting the Hessian of the log loss
+/// and so could be a big performance hit if large numbers of features are
+/// used.
+struct SimpleNewtonsMethodOptimizer {
+    number_of_iterations: usize,
+    l2_strength: f64,
+    regularize_bias: bool,
+}
+
+impl Optimize for SimpleNewtonsMethodOptimizer {
+    type ModelType = LogisticRegression<f64>;
+
+    /// Optimize the model.
+    fn optimize<S1, S2, S3>(
+        &self,
+        inputs: &ArrayBase<S1, Ix2>,
+        outputs: &ArrayBase<S2, Ix1>,
+        _weights: Option<&ArrayBase<S3, Ix1>>,
+        model: &mut Self::ModelType,
+    ) -> Result<(), Box<dyn Error>>
+    where
+    S1: Data<Elem = f64>,
+    S2: Data<Elem = ClassLabel>,
+    S3: Data<Elem = f64>
+    {
+        let float_outputs = outputs.mapv(|a| a as f64);
+        let size = inputs.shape()[0];
+        let size_scale = 1.0 / (inputs.shape()[0] as f64);
+        let mut l2_mask = self.l2_strength * Array::ones((model.coefficients.shape()[0],));
+        if !self.regularize_bias {
+            l2_mask[0] = 0.0;
+        }
+        let l2_weight_jacobian = Array::diag(&l2_mask);
+        let ones: Array1::<f64> = Array::ones(size);
+        // TODO: Clean up this code - probably some can be combined.
+        for _iter in 1..self.number_of_iterations {
+            let predictions = model.predict_proba(inputs);
+            let predictions = predictions.slice(s![.., 1]);
+            let diff = &float_outputs - &predictions;
+            let gradients = - size_scale * inputs.t().dot(&diff) + &l2_mask * &model.coefficients;
+            let inv_predictions = &ones - &predictions;
+            let jacobian_weight = &inv_predictions * &predictions;
+            let jacobian_weight = jacobian_weight.into_shape((size, 1))?;
+            let weighted_inputs = inputs * &jacobian_weight;
+            let transformed_inputs = inputs.t().dot(&weighted_inputs);
+            // Note: Will be a bottleneck when large numbers of features are chosen
+            let inv_jacobian = (size_scale * &transformed_inputs + &l2_weight_jacobian).inv()?;
+            model.coefficients = &model.coefficients - &inv_jacobian.dot(&gradients);
+        }
+        Ok(())
     }
 }
 
@@ -111,5 +196,60 @@ mod tests {
         let expected_results = array![0, 1, 1, 1, 0, 0, 0];
         let results = model.predict(&data);
         assert_eq!(expected_results, results);
+    }
+
+    #[test]
+    fn test_newtons_method_optimization() {
+        let mut model = LogisticRegression::<f64> {
+            coefficients: array![0.0, 0.0],
+        };
+        let data: Array2::<f64> = array![
+            [1.0, 0.0],
+            [1.0, 0.0],
+            [1.0, 0.0],
+            [1.0, 0.0],
+            [1.0, 0.0],
+            [1.0, 0.25],
+            [1.0, 0.25],
+            [1.0, 0.25],
+            [1.0, 0.25],
+            [1.0, 0.25],
+            [1.0, 0.5],
+            [1.0, 0.5],
+            [1.0, 0.5],
+            [1.0, 0.5],
+            [1.0, 0.5],
+            [1.0, 0.75],
+            [1.0, 0.75],
+            [1.0, 0.75],
+            [1.0, 0.75],
+            [1.0, 0.75],
+            [1.0, 1.0],
+            [1.0, 1.0],
+            [1.0, 1.0],
+            [1.0, 1.0],
+            [1.0, 1.0],
+        ];
+        let outputs: Array1::<usize> = array![
+            0, 0, 0, 0, 1,
+            0, 0, 0, 1, 1,
+            1, 1, 1, 0, 0,
+            1, 1, 1, 1, 0,
+            1, 1, 1, 1, 1,
+        ];
+        // Should figure out how to get the type to infer correctly
+        let weights: Option<&Array1::<f64>> = None;
+        let optimizer = SimpleNewtonsMethodOptimizer {
+            number_of_iterations: 100,
+            l2_strength: 0.02,
+            regularize_bias: false,
+        };
+        optimizer.optimize(&data, &outputs, weights, &mut model)
+            .expect("Could not optimize!");
+        let expected_coefficients = array![-0.585770, 2.08941];
+        let epsilon = 1e-5;
+        let differences = expected_coefficients - model.coefficients;
+        let error = differences.mapv(|a| a.abs()).sum();
+        assert!(error < epsilon);
     }
 }
