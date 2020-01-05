@@ -18,12 +18,19 @@ linear regression models with different training algorithms).
 I am also just starting to learn Rust, so it's likely that some design choices can be improved to match the correct style for the
 language. Feel free to comment.
 
+## Current Features
+
+* Linear regression with a matrix inversion (Newton's method) solver and optional L2 regularization
+* Logistic regression with a naive Newton's method solver and optional L2 regularization
+* A couple basic evaluation metrics
+
 
 ## TODOs
 
 There are lots of things to do before releasing this, including
 * Settle on a good high level API
-* Add in more optimization methods - gradient descent, SGD, maybe some Newton's method based optimizers
-* Add in more models - logistic regression for classification is one simple one, consider decision trees or even trying to make wrappers for existing C/C++ decision tree packages
-* Add in more traits: multi-valued regression, classification, multilabel classification, transformers
-* Add unit and integration tests (a bit more complicated here since we don't want to force the user to use a single LAPACK/BLAS backend) and remove main file.
+* Add in more optimization methods - gradient descent, SGD, different Newton's method variants, simulated annealing
+  * Can we make use of 3rd party C/Fortran optimization packages to not have to code everything from scratch?
+* Figure out better initialization schemes - randomized methods, maybe some MCMC to walk through parameter space 
+* Add in more models - some tractable ones could be some basic Naive Bayes models, linear or quadratic discriminants, linear SVC, basic decision trees
+* Add in more traits: multi-valued regression, multilabel classification, transformers
