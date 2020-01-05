@@ -124,7 +124,7 @@ impl Optimize for SimpleNewtonsMethodOptimizer {
         if !self.regularize_bias {
             l2_mask[0] = 0.0;
         }
-        let l2_weight_jacobian = Array::diag(&l2_mask);
+        let l2_weight_hessian = Array::diag(&l2_mask);
         let ones: Array1::<f64> = Array::ones(size);
         // TODO: Clean up this code - probably some can be combined.
         for _iter in 1..self.number_of_iterations {
@@ -133,13 +133,13 @@ impl Optimize for SimpleNewtonsMethodOptimizer {
             let diff = &float_outputs - &predictions;
             let gradients = - size_scale * inputs.t().dot(&diff) + &l2_mask * &model.coefficients;
             let inv_predictions = &ones - &predictions;
-            let jacobian_weight = &inv_predictions * &predictions;
-            let jacobian_weight = jacobian_weight.into_shape((size, 1))?;
-            let weighted_inputs = inputs * &jacobian_weight;
+            let hessian_weight = &inv_predictions * &predictions;
+            let hessian_weight = hessian_weight.into_shape((size, 1))?;
+            let weighted_inputs = inputs * &hessian_weight;
             let transformed_inputs = inputs.t().dot(&weighted_inputs);
             // Note: Will be a bottleneck when large numbers of features are chosen
-            let inv_jacobian = (size_scale * &transformed_inputs + &l2_weight_jacobian).inv()?;
-            model.coefficients = &model.coefficients - &inv_jacobian.dot(&gradients);
+            let inv_hessian = (size_scale * &transformed_inputs + &l2_weight_hessian).inv()?;
+            model.coefficients = &model.coefficients - &inv_hessian.dot(&gradients);
         }
         Ok(())
     }
