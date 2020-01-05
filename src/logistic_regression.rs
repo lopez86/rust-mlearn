@@ -138,7 +138,7 @@ impl Optimize for SimpleNewtonsMethodOptimizer {
             let weighted_inputs = inputs * &hessian_weight;
             let transformed_inputs = inputs.t().dot(&weighted_inputs);
             // Note: Will be a bottleneck when large numbers of features are chosen
-            let inv_hessian = (size_scale * &transformed_inputs + &l2_weight_hessian).inv()?;
+            let inv_hessian = (size_scale * &transformed_inputs + l2_weight_hessian).inv()?;
             model.coefficients = &model.coefficients - &inv_hessian.dot(&gradients);
         }
         Ok(())

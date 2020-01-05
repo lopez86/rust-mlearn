@@ -14,20 +14,19 @@
 //! use mlearn::model_builder::ModelBuilder;
 //! use mlearn::linear_regression::{LinearMatrixSolver, ZeroInitializer};
 //!
-//! fn main() {
-//!    let my_data = array![[1., 1.,], [1., 0.], [1., 2.]];
-//!    let my_results = array![1., 1.1, 1.3];
-//!    let builder = ModelBuilder {
-//!        initializer: ZeroInitializer {},
-//!        optimizer: LinearMatrixSolver {},
-//!    };
-//!    let model = builder.build_regression(&my_data, &my_results, None)
-//!        .expect("Build failed.");
-//!    println!("{}", model.coefficients);
-//! }
+//!
+//! let my_data = array![[1., 1.,], [1., 0.], [1., 2.]];
+//! let my_results = array![1., 1.1, 1.3];
+//! let builder = ModelBuilder {
+//!    initializer: ZeroInitializer {},
+//!    optimizer: LinearMatrixSolver {},
+//! };
+//! let model = builder.build_regression(&my_data, &my_results, None)
+//!    .expect("Build failed.");
+//! println!("{}", model.coefficients);
 //! ```
 
-// Basic tools
+// Basic toolsS
 pub mod metrics;
 
 // Regression

@@ -18,8 +18,7 @@ where
 {
     let difference = truth - predictions;
     let squares = &difference * &difference;
-    let mean = squares.sum() / T::from(squares.len()).unwrap();
-    mean
+    squares.sum() / T::from(squares.len()).unwrap()
 }
 
 /// Calculate the mean absolute error (L1 loss) between two arrays.
@@ -33,8 +32,7 @@ where
     S2: Data<Elem = T>,
 {
     let difference = (truth - predictions).mapv_into(T::abs);
-    let mean = difference.sum() / T::from(difference.len()).unwrap();
-    mean
+    difference.sum() / T::from(difference.len()).unwrap()
 }
 
 #[cfg(test)]

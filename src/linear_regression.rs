@@ -29,7 +29,7 @@ impl<T: LinalgScalar> Regression for LinearRegressor<T> {
         &self,
         inputs: &ArrayBase<S, Ix2>,
     ) -> Array1<Self::DataType> {
-        return inputs.dot(&self.coefficients)
+        inputs.dot(&self.coefficients)
     }
 }
 
@@ -54,10 +54,7 @@ impl Initialize for ZeroInitializer {
      {
         let n_features = inputs.shape()[1];
         let coefficients = Array::zeros((n_features,));
-        let model = LinearRegressor {
-            coefficients: coefficients,
-        };
-        model
+        LinearRegressor { coefficients }
     }
 }
 
@@ -153,9 +150,7 @@ mod tests {
     fn test_linear_regressor() {
         let coefficients = array![1.0, 2.0, 3.0];
         let data = array![[0., 0., 0.], [0., 1., 2.]];
-        let model = LinearRegressor::<f64>{
-            coefficients: coefficients,
-        };
+        let model = LinearRegressor::<f64> { coefficients };
         let predictions = model.predict(&data);
         let expected_results = array![0., 8.];
         let differences = expected_results - predictions;
